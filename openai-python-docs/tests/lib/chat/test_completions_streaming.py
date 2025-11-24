@@ -9,7 +9,12 @@ import httpx
 import pytest
 from respx import MockRouter
 from pydantic import BaseModel
-from inline_snapshot import external, snapshot, outsource
+from inline_snapshot import (
+    external,
+    snapshot,
+    outsource,  # pyright: ignore[reportUnknownVariableType]
+    get_snapshot_value,
+)
 
 import openai
 from openai import OpenAI, AsyncOpenAI
@@ -26,7 +31,7 @@ from openai.lib.streaming.chat import (
 )
 from openai.lib._parsing._completions import ResponseFormatT
 
-from ._utils import print_obj
+from ..utils import print_obj
 from ...conftest import base_url
 
 _T = TypeVar("_T")
@@ -35,13 +40,13 @@ _T = TypeVar("_T")
 #
 # you can update them with
 #
-# `OPENAI_LIVE=1 pytest --inline-snapshot=fix`
+# `OPENAI_LIVE=1 pytest --inline-snapshot=fix -p no:xdist -o addopts=""`
 
 
 @pytest.mark.respx(base_url=base_url)
 def test_parse_nothing(client: OpenAI, respx_mock: MockRouter, monkeypatch: pytest.MonkeyPatch) -> None:
     listener = _make_stream_snapshot_request(
-        lambda c: c.beta.chat.completions.stream(
+        lambda c: c.chat.completions.stream(
             model="gpt-4o-2024-08-06",
             messages=[
                 {
@@ -103,7 +108,7 @@ def test_parse_pydantic_model(client: OpenAI, respx_mock: MockRouter, monkeypatc
             done_snapshots.append(model_copy(stream.current_completion_snapshot, deep=True))
 
     listener = _make_stream_snapshot_request(
-        lambda c: c.beta.chat.completions.stream(
+        lambda c: c.chat.completions.stream(
             model="gpt-4o-2024-08-06",
             messages=[
                 {
@@ -195,7 +200,7 @@ def test_parse_pydantic_model_multiple_choices(
         units: Literal["c", "f"]
 
     listener = _make_stream_snapshot_request(
-        lambda c: c.beta.chat.completions.stream(
+        lambda c: c.chat.completions.stream(
             model="gpt-4o-2024-08-06",
             messages=[
                 {
@@ -374,7 +379,7 @@ def test_parse_max_tokens_reached(client: OpenAI, respx_mock: MockRouter) -> Non
 
     with pytest.raises(openai.LengthFinishReasonError):
         _make_stream_snapshot_request(
-            lambda c: c.beta.chat.completions.stream(
+            lambda c: c.chat.completions.stream(
                 model="gpt-4o-2024-08-06",
                 messages=[
                     {
@@ -399,7 +404,7 @@ def test_parse_pydantic_model_refusal(client: OpenAI, respx_mock: MockRouter, mo
         units: Literal["c", "f"]
 
     listener = _make_stream_snapshot_request(
-        lambda c: c.beta.chat.completions.stream(
+        lambda c: c.chat.completions.stream(
             model="gpt-4o-2024-08-06",
             messages=[
                 {
@@ -444,7 +449,7 @@ RefusalDoneEvent(refusal="I'm sorry, I can't assist with that request.", type='r
 @pytest.mark.respx(base_url=base_url)
 def test_content_logprobs_events(client: OpenAI, respx_mock: MockRouter, monkeypatch: pytest.MonkeyPatch) -> None:
     listener = _make_stream_snapshot_request(
-        lambda c: c.beta.chat.completions.stream(
+        lambda c: c.chat.completions.stream(
             model="gpt-4o-2024-08-06",
             messages=[
                 {
@@ -523,7 +528,7 @@ def test_refusal_logprobs_events(client: OpenAI, respx_mock: MockRouter, monkeyp
         units: Literal["c", "f"]
 
     listener = _make_stream_snapshot_request(
-        lambda c: c.beta.chat.completions.stream(
+        lambda c: c.chat.completions.stream(
             model="gpt-4o-2024-08-06",
             messages=[
                 {
@@ -635,7 +640,7 @@ def test_parse_pydantic_tool(client: OpenAI, respx_mock: MockRouter, monkeypatch
         units: Literal["c", "f"] = "c"
 
     listener = _make_stream_snapshot_request(
-        lambda c: c.beta.chat.completions.stream(
+        lambda c: c.chat.completions.stream(
             model="gpt-4o-2024-08-06",
             messages=[
                 {
@@ -733,7 +738,7 @@ def test_parse_multiple_pydantic_tools(client: OpenAI, respx_mock: MockRouter, m
         exchange: str
 
     listener = _make_stream_snapshot_request(
-        lambda c: c.beta.chat.completions.stream(
+        lambda c: c.chat.completions.stream(
             model="gpt-4o-2024-08-06",
             messages=[
                 {
@@ -831,7 +836,7 @@ def test_parse_multiple_pydantic_tools(client: OpenAI, respx_mock: MockRouter, m
 @pytest.mark.respx(base_url=base_url)
 def test_parse_strict_tools(client: OpenAI, respx_mock: MockRouter, monkeypatch: pytest.MonkeyPatch) -> None:
     listener = _make_stream_snapshot_request(
-        lambda c: c.beta.chat.completions.stream(
+        lambda c: c.chat.completions.stream(
             model="gpt-4o-2024-08-06",
             messages=[
                 {
@@ -903,7 +908,7 @@ def test_parse_strict_tools(client: OpenAI, respx_mock: MockRouter, monkeypatch:
 @pytest.mark.respx(base_url=base_url)
 def test_non_pydantic_response_format(client: OpenAI, respx_mock: MockRouter, monkeypatch: pytest.MonkeyPatch) -> None:
     listener = _make_stream_snapshot_request(
-        lambda c: c.beta.chat.completions.stream(
+        lambda c: c.chat.completions.stream(
             model="gpt-4o-2024-08-06",
             messages=[
                 {
@@ -951,7 +956,7 @@ def test_allows_non_strict_tools_but_no_parsing(
     client: OpenAI, respx_mock: MockRouter, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     listener = _make_stream_snapshot_request(
-        lambda c: c.beta.chat.completions.stream(
+        lambda c: c.chat.completions.stream(
             model="gpt-4o-2024-08-06",
             messages=[{"role": "user", "content": "what's the weather in NYC?"}],
             tools=[
@@ -1069,7 +1074,7 @@ def test_stream_method_in_sync(sync: bool, client: OpenAI, async_client: AsyncOp
 
     assert_signatures_in_sync(
         checking_client.chat.completions.create,
-        checking_client.beta.chat.completions.stream,
+        checking_client.chat.completions.stream,
         exclude_params={"response_format", "stream"},
     )
 
@@ -1123,7 +1128,7 @@ def _make_stream_snapshot_request(
         respx_mock.post("/chat/completions").mock(
             return_value=httpx.Response(
                 200,
-                content=content_snapshot._old_value._load_value(),
+                content=get_snapshot_value(content_snapshot),
                 headers={"content-type": "text/event-stream"},
             )
         )
@@ -1170,7 +1175,7 @@ def _make_raw_stream_snapshot_request(
         respx_mock.post("/chat/completions").mock(
             return_value=httpx.Response(
                 200,
-                content=content_snapshot._old_value._load_value(),
+                content=get_snapshot_value(content_snapshot),
                 headers={"content-type": "text/event-stream"},
             )
         )
