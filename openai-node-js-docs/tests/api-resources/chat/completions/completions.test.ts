@@ -1,7 +1,6 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
 import OpenAI from 'openai';
-import { Response } from 'node-fetch';
 
 const client = new OpenAI({
   apiKey: 'My API Key',
@@ -27,7 +26,7 @@ describe('resource completions', () => {
     const response = await client.chat.completions.create({
       messages: [{ content: 'string', role: 'developer', name: 'name' }],
       model: 'gpt-4o',
-      audio: { format: 'wav', voice: 'alloy' },
+      audio: { format: 'wav', voice: 'ash' },
       frequency_penalty: -2,
       function_call: 'none',
       functions: [{ name: 'name', description: 'description', parameters: { foo: 'bar' } }],
@@ -41,14 +40,17 @@ describe('resource completions', () => {
       parallel_tool_calls: true,
       prediction: { content: 'string', type: 'content' },
       presence_penalty: -2,
-      reasoning_effort: 'low',
+      prompt_cache_key: 'prompt-cache-key-1234',
+      prompt_cache_retention: 'in-memory',
+      reasoning_effort: 'none',
       response_format: { type: 'text' },
+      safety_identifier: 'safety-identifier-1234',
       seed: -9007199254740991,
       service_tier: 'auto',
       stop: '\n',
       store: true,
       stream: false,
-      stream_options: { include_usage: true },
+      stream_options: { include_obfuscation: true, include_usage: true },
       temperature: 1,
       tool_choice: 'none',
       tools: [
@@ -60,6 +62,7 @@ describe('resource completions', () => {
       top_logprobs: 0,
       top_p: 1,
       user: 'user-1234',
+      verbosity: 'low',
       web_search_options: {
         search_context_size: 'low',
         user_location: {
@@ -79,13 +82,6 @@ describe('resource completions', () => {
     const dataAndResponse = await responsePromise.withResponse();
     expect(dataAndResponse.data).toBe(response);
     expect(dataAndResponse.response).toBe(rawResponse);
-  });
-
-  test('retrieve: request options instead of params are passed correctly', async () => {
-    // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
-    await expect(
-      client.chat.completions.retrieve('completion_id', { path: '/_stainless_unknown_path' }),
-    ).rejects.toThrow(OpenAI.NotFoundError);
   });
 
   test('update: only required params', async () => {
@@ -114,13 +110,6 @@ describe('resource completions', () => {
     expect(dataAndResponse.response).toBe(rawResponse);
   });
 
-  test('list: request options instead of params are passed correctly', async () => {
-    // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
-    await expect(client.chat.completions.list({ path: '/_stainless_unknown_path' })).rejects.toThrow(
-      OpenAI.NotFoundError,
-    );
-  });
-
   test('list: request options and params are passed correctly', async () => {
     // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
     await expect(
@@ -131,8 +120,8 @@ describe('resource completions', () => {
     ).rejects.toThrow(OpenAI.NotFoundError);
   });
 
-  test('del', async () => {
-    const responsePromise = client.chat.completions.del('completion_id');
+  test('delete', async () => {
+    const responsePromise = client.chat.completions.delete('completion_id');
     const rawResponse = await responsePromise.asResponse();
     expect(rawResponse).toBeInstanceOf(Response);
     const response = await responsePromise;
@@ -140,12 +129,5 @@ describe('resource completions', () => {
     const dataAndResponse = await responsePromise.withResponse();
     expect(dataAndResponse.data).toBe(response);
     expect(dataAndResponse.response).toBe(rawResponse);
-  });
-
-  test('del: request options instead of params are passed correctly', async () => {
-    // ensure the request options are being passed correctly by passing an invalid HTTP method in order to cause an error
-    await expect(
-      client.chat.completions.del('completion_id', { path: '/_stainless_unknown_path' }),
-    ).rejects.toThrow(OpenAI.NotFoundError);
   });
 });

@@ -1,4 +1,4 @@
-import { OpenAIRealtimeWebSocket } from 'openai/beta/realtime/websocket';
+import { OpenAIRealtimeWebSocket } from 'openai/realtime/websocket';
 import { AzureOpenAI } from 'openai';
 import { DefaultAzureCredential, getBearerTokenProvider } from '@azure/identity';
 import 'dotenv/config';
@@ -21,8 +21,9 @@ async function main() {
     rt.send({
       type: 'session.update',
       session: {
-        modalities: ['text'],
+        output_modalities: ['text'],
         model: 'gpt-4o-realtime-preview',
+        type: 'realtime',
       },
     });
 
@@ -40,7 +41,7 @@ async function main() {
 
   rt.on('error', (err) => {
     // in a real world scenario this should be logged somewhere as you
-    // likely want to continue procesing events regardless of any errors
+    // likely want to continue processing events regardless of any errors
     throw err;
   });
 
@@ -49,8 +50,8 @@ async function main() {
     console.log();
   });
 
-  rt.on('response.text.delta', (event) => process.stdout.write(event.delta));
-  rt.on('response.text.done', () => console.log());
+  rt.on('response.output_text.delta', (event) => process.stdout.write(event.delta));
+  rt.on('response.output_text.done', () => console.log());
 
   rt.on('response.done', () => rt.close());
 

@@ -2,18 +2,18 @@
 
 The OpenAI API supports extracting JSON from the model with the `response_format` request param, for more details on the API, see [this guide](https://platform.openai.com/docs/guides/structured-outputs).
 
-The SDK provides a `client.beta.chat.completions.parse()` method which is a wrapper over the `client.chat.completions.create()` that
+The SDK provides a `client.chat.completions.parse()` method which is a wrapper over the `client.chat.completions.create()` that
 provides richer integrations with TS specific types & returns a `ParsedChatCompletion` object, which is an extension of the standard `ChatCompletion` type.
 
 ## Auto-parsing response content with Zod schemas
 
-You can pass zod schemas wrapped with `zodResponseFormat()` to the `.parse()` method and the SDK will automatically conver the model
+You can pass zod schemas wrapped with `zodResponseFormat()` to the `.parse()` method and the SDK will automatically convert the model
 into a JSON schema, send it to the API and parse the response content back using the given zod schema.
 
 ```ts
 import { zodResponseFormat } from 'openai/helpers/zod';
 import OpenAI from 'openai/index';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 const Step = z.object({
   explanation: z.string(),
@@ -27,7 +27,7 @@ const MathResponse = z.object({
 
 const client = new OpenAI();
 
-const completion = await client.beta.chat.completions.parse({
+const completion = await client.chat.completions.parse({
   model: 'gpt-4o-2024-08-06',
   messages: [
     { role: 'system', content: 'You are a helpful math tutor.' },
@@ -57,7 +57,7 @@ For example:
 ```ts
 import { zodFunction } from 'openai/helpers/zod';
 import OpenAI from 'openai/index';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 const Table = z.enum(['orders', 'customers', 'products']);
 
@@ -93,7 +93,7 @@ const Query = z.object({
 });
 
 const client = new OpenAI();
-const completion = await client.beta.chat.completions.parse({
+const completion = await client.chat.completions.parse({
   model: 'gpt-4o-2024-08-06',
   messages: [
     {
@@ -122,7 +122,7 @@ main();
 
 ### Differences from `.create()`
 
-The `beta.chat.completions.parse()` method imposes some additional restrictions on it's usage that `chat.completions.create()` does not.
+The `chat.completions.parse()` method imposes some additional restrictions on it's usage that `chat.completions.create()` does not.
 
 - If the completion completes with `finish_reason` set to `length` or `content_filter`, the `LengthFinishReasonError` / `ContentFilterFinishReasonError` errors will be raised.
 - Only strict function tools can be passed, e.g. `{type: 'function', function: {..., strict: true}}`
@@ -304,7 +304,7 @@ See an example of streaming helpers in action in [`examples/stream.ts`](examples
 
 ### Automated function calls
 
-We provide the `openai.beta.chat.completions.runTools({…})`
+We provide the `openai.chat.completions.runTools({…})`
 convenience helper for using function tool calls with the `/chat/completions` endpoint
 which automatically call the JavaScript functions you provide
 and sends their results back to the `/chat/completions` endpoint,
@@ -323,7 +323,7 @@ import OpenAI from 'openai';
 const client = new OpenAI();
 
 async function main() {
-  const runner = client.beta.chat.completions
+  const runner = client.chat.completions
     .runTools({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: 'How is the weather this week?' }],
@@ -630,7 +630,7 @@ assistant's response to make sure it conforms to a schema. Paired with [`zod-to-
 
 ```ts
 import OpenAI from 'openai';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 const client = new OpenAI();

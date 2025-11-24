@@ -1,7 +1,6 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
 import OpenAI from 'openai';
-import { Response } from 'node-fetch';
 
 const client = new OpenAI({
   apiKey: 'My API Key',
@@ -21,9 +20,6 @@ describe('resource moderations', () => {
   });
 
   test('create: required and optional params', async () => {
-    const response = await client.moderations.create({
-      input: 'I want to kill them.',
-      model: 'omni-moderation-2024-09-26',
-    });
+    const response = await client.moderations.create({ input: 'I want to kill them.', model: 'string' });
   });
 });

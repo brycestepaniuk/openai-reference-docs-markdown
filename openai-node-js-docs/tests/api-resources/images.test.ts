@@ -1,7 +1,6 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
 import OpenAI, { toFile } from 'openai';
-import { Response } from 'node-fetch';
 
 const client = new OpenAI({
   apiKey: 'My API Key',
@@ -25,10 +24,10 @@ describe('resource images', () => {
   test('createVariation: required and optional params', async () => {
     const response = await client.images.createVariation({
       image: await toFile(Buffer.from('# my file contents'), 'README.md'),
-      model: 'dall-e-2',
+      model: 'string',
       n: 1,
       response_format: 'url',
-      size: '256x256',
+      size: '1024x1024',
       user: 'user-1234',
     });
   });
@@ -51,11 +50,18 @@ describe('resource images', () => {
     const response = await client.images.edit({
       image: await toFile(Buffer.from('# my file contents'), 'README.md'),
       prompt: 'A cute baby sea otter wearing a beret',
+      background: 'transparent',
+      input_fidelity: 'high',
       mask: await toFile(Buffer.from('# my file contents'), 'README.md'),
-      model: 'dall-e-2',
+      model: 'string',
       n: 1,
+      output_compression: 100,
+      output_format: 'png',
+      partial_images: 1,
+      quality: 'high',
       response_format: 'url',
-      size: '256x256',
+      size: '1024x1024',
+      stream: false,
       user: 'user-1234',
     });
   });
@@ -74,11 +80,17 @@ describe('resource images', () => {
   test('generate: required and optional params', async () => {
     const response = await client.images.generate({
       prompt: 'A cute baby sea otter',
-      model: 'dall-e-3',
+      background: 'transparent',
+      model: 'string',
+      moderation: 'low',
       n: 1,
-      quality: 'standard',
+      output_compression: 100,
+      output_format: 'png',
+      partial_images: 1,
+      quality: 'medium',
       response_format: 'url',
-      size: '256x256',
+      size: '1024x1024',
+      stream: false,
       style: 'vivid',
       user: 'user-1234',
     });
