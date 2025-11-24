@@ -1,0 +1,49 @@
+name: Update OpenAI Docs
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # every day at 03:00 UTC
+  workflow_dispatch: {}   # allow manual runs
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run scraper & combine scripts
+        run: |
+          python download_openai_python_docs.py
+          python download_openai_node_js_docs.py
+          python download_openai_agent_python_docs.py
+          python download_openai_cookbook.py
+          python combine_markdown.py
+
+      - name: Commit changes
+        run: |
+          git config user.name "docs-bot"
+          git config user.email "docs-bot@users.noreply.github.com"
+          
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add .
+            git commit -m "Auto-update OpenAI docs"
+          else
+            echo "No changes."
+          fi
+
+      - name: Push results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git push
