@@ -32,7 +32,8 @@ def download_github_repo(repo_url, extract_to):
     print_status(f"Downloading repository from {repo_url}")
     
     # GitHub provides a zip download link for any branch
-    zip_url = f"{repo_url}/archive/refs/heads/main.zip"
+    branch = "master"
+    zip_url = f"{repo_url}/archive/refs/heads/{branch}.zip"
     print_status(f"Download URL: {zip_url}")
     
     # Download the zip file
