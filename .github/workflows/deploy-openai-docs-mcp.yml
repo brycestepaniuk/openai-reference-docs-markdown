@@ -1,32 +1,20 @@
 name: Deploy OpenAI Docs MCP
 
 on:
-  # Allow manual runs from the GitHub Actions UI
+  # 1) Manual button in the Actions tab
   workflow_dispatch:
 
-  # Auto-deploy whenever the "Update OpenAI Docs" workflow finishes
+  # 2) Run every night at 05:45 UTC
+  schedule:
+    - cron: "45 5 * * *"
+
+  # 3) Also auto-run whenever "Update OpenAI Docs" finishes successfully
   workflow_run:
-    workflows: ["Update OpenAI Docs"]   # must match the *name* of your other workflow
+    workflows: ["Update OpenAI Docs"]
     types: [completed]
-
-env:
-  AZURE_WEBAPP_NAME: openai-docs-mcp
-
-concurrency:
-  # Prevent overlapping deploys if two triggers happen close together
-  group: deploy-openai-docs-mcp
-  cancel-in-progress: false
 
 jobs:
   deploy:
-    # Only run if:
-    # - manually triggered, OR
-    # - triggered by workflow_run *and* the docs update workflow succeeded
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success')
-
     runs-on: ubuntu-latest
 
     steps:
@@ -38,18 +26,13 @@ jobs:
         with:
           python-version: "3.11"
 
-      # Optional: install dependencies so Azure's Oryx build has them cached.
-      # Safe to keep; if requirements.txt doesn't exist, this does nothing.
       - name: Install Python dependencies
         run: |
-          if [ -f requirements.txt ]; then
-            python -m pip install --upgrade pip
-            pip install -r requirements.txt || true
-          fi
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
