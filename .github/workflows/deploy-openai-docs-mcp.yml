@@ -1,21 +1,31 @@
 name: Deploy OpenAI Docs MCP
 
 on:
-  # Let you run it manually from the Actions tab (for testing)
+  # Allow manual runs from the GitHub Actions UI
   workflow_dispatch:
 
-  # Auto-deploy whenever "Update OpenAI Docs" finishes successfully
+  # Auto-deploy whenever the "Update OpenAI Docs" workflow finishes
   workflow_run:
-    workflows: ["Update OpenAI Docs"]
-    types:
-      - completed
+    workflows: ["Update OpenAI Docs"]   # must match the *name* of your other workflow
+    types: [completed]
+
+env:
+  AZURE_WEBAPP_NAME: openai-docs-mcp
+
+concurrency:
+  # Prevent overlapping deploys if two triggers happen close together
+  group: deploy-openai-docs-mcp
+  cancel-in-progress: false
 
 jobs:
   deploy:
     # Only run if:
-    #   - the triggering workflow ("Update OpenAI Docs") succeeded
-    #   - OR this was started manually (workflow_dispatch)
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # - manually triggered, OR
+    # - triggered by workflow_run *and* the docs update workflow succeeded
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success')
 
     runs-on: ubuntu-latest
 
@@ -23,20 +33,23 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # (Optional) sanity check that the project still installs
-      - name: Set up Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      # Optional: install dependencies so Azure's Oryx build has them cached.
+      # Safe to keep; if requirements.txt doesn't exist, this does nothing.
+      - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt || true
+          fi
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: "openai-docs-mcp"
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
