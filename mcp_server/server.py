@@ -21,12 +21,29 @@ if PROJECT_ROOT not in sys.path:
 # ---------------------------------------------------------------------------
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 from mcp_server.docs_tools import register_docs_tools  # now importable
 
 
 # Create the MCP instance and register all tools.
 # The fastmcp CLI will look for this `mcp` object.
-mcp = FastMCP("openai-docs-demo")
+mcp = FastMCP(
+    "openai-docs-demo",
+    transport_security=TransportSecuritySettings(
+        # Keep DNS rebinding protection ON, but explicitly allow your Azure host.
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=[
+            "openai-docs-mcp.azurewebsites.net",
+            "openai-docs-mcp.azurewebsites.net:*",
+        ],
+        # Origins are mainly relevant for browser-based clients, but harmless to set.
+        allowed_origins=[
+            "https://openai-docs-mcp.azurewebsites.net",
+        ],
+    ),
+)
+
+# Register your OpenAI docs tools with this MCP instance.
 register_docs_tools(mcp)
 
 
